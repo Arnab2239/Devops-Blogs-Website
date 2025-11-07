@@ -1,14 +1,25 @@
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = ">= 3.0"
+  version = "~> 4.0"
 
-  name = "${var.cluster_name}-vpc"
-  cidr = var.vpc_cidr
-
-  azs             = slice(data.aws_availability_zones.available.names, 0, 3)
-  private_subnets = ["10.0.1.0/24","10.0.2.0/24","10.0.3.0/24"]
-  public_subnets  = ["10.0.101.0/24","10.0.102.0/24","10.0.103.0/24"]
+  name            = local.name
+  cidr            = local.vpc_cidr
+  azs             = local.azs
+  public_subnets  = local.public_subnets
+  private_subnets = local.private_subnets
+  intra_subnets   = local.intra_subnets
 
   enable_nat_gateway = true
-  single_nat_gateway = true
+
+  public_subnet_tags = {
+    "kubernetes.io/role/elb" = 1
+    "kubernetes.io/cluster/${local.name}" = "shared"
+  }
+
+  private_subnet_tags = {
+    "kubernetes.io/role/internal-elb" = 1
+    "kubernetes.io/cluster/${local.name}" = "shared"
+  }
+
+  map_public_ip_on_launch = true
 }
