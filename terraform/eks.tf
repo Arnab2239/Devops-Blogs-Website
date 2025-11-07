@@ -1,32 +1,46 @@
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = ">= 19.0"
+  version = "~> 19.15.1"
 
-  cluster_name    = var.cluster_name
-  cluster_version = "1.27"  # set desired EKS version
-  subnets         = module.vpc.private_subnets
-  vpc_id          = module.vpc.vpc_id
+  cluster_name                   = local.name
+  cluster_endpoint_public_access = true
 
-  # Enable EKS control plane logging to CloudWatch
-  cluster_enabled_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
+  vpc_id                   = module.vpc.vpc_id
+  subnet_ids               = module.vpc.public_subnets         # Node groups in private subnets
+  control_plane_subnet_ids = module.vpc.intra_subnets           # Control plane in intra subnets
 
-  node_groups = {
-    default = {
-      desired_capacity = 2
-      max_capacity     = 4
-      min_capacity     = 2
+  cluster_addons = {
+    coredns   = { most_recent = true }
+    kube-proxy = { most_recent = true }
+    vpc-cni    = { most_recent = true }
+  }
 
-      instance_type = "t3.medium"
-      key_name      = ""   # optional ssh key
+ 
+
+  eks_managed_node_groups = {
+    arnab_eks_node- = {
+      min_size     = 1
+      max_size     = 2
+      desired_size = 2
+
+     
+      instance_types = ["t2.large"]
+    
+
+      capacity_type = "SPOT"
+
+      disk_size                 = 35
+      use_custom_launch_template = false
+
+      additional_security_group_ids = [aws_security_group.allow_user_to_connect.id]
+
+      tags = {
+        Name        = "arnab_eks_nodes "
+        Environment = "dev"
+        ExtraTag    = "e_commerce_app"
+      }
     }
   }
 
-  manage_aws_auth = true
-
-  # Map IAM OIDC provider for IRSA
-  create_irsa = true
-
-  tags = {
-    "Project" = "devops-blog"
-  }
+  tags = local.tags
 }
