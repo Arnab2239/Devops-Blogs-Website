@@ -1,70 +1,67 @@
 name: CI/CD Pipeline
-DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-steps:
-- uses: actions/checkout@v4
 
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
 
-- name: Login to DockerHub
-uses: docker/login-action@v2
-with:
-username: ${{ secrets.DOCKERHUB_USERNAME }}
-password: ${{ secrets.DOCKERHUB_TOKEN }}
+jobs:
+  docker-build-push:
+    runs-on: ubuntu-latest
 
+    steps:
+      - uses: actions/checkout@v4
 
-- name: Build and push frontend image
-run: |
-docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/blog-frontend:latest ./frontend
-docker push ${{ secrets.DOCKERHUB_USERNAME }}/blog-frontend:latest
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Build and push frontend image
+        run: |
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/blog-frontend:latest ./frontend
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/blog-frontend:latest
 
-- name: Build and push backend image
-run: |
-docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/blog-backend:latest ./backend
-docker push ${{ secrets.DOCKERHUB_USERNAME }}/blog-backend:latest
+      - name: Build and push backend image
+        run: |
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/blog-backend:latest ./backend
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/blog-backend:latest
 
+  deploy-to-k8s:
+    needs: docker-build-push
+    runs-on: ubuntu-latest
 
-deploy-to-k8s:
-needs: docker-build-push
-runs-on: ubuntu-latest
-steps:
-- uses: actions/checkout@v4
+    steps:
+      - uses: actions/checkout@v4
 
+      - name: Setup Kubectl
+        uses: crazy-max/ghaction-kubectl@v5
+        with:
+          version: '1.28.0'
 
-- name: Setup Kubectl
-uses: crazy-max/ghaction-kubectl@v5
-with:
-version: '1.28.0'
+      - name: Install Kustomize
+        run: |
+          curl -sLo kustomize https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v5.0.1/kustomize_5.0.1_linux_amd64
+          chmod +x kustomize
+          sudo mv kustomize /usr/local/bin/
 
+      - name: Configure Kubeconfig
+        run: |
+          echo "${{ secrets.KUBECONFIG_BASE64 }}" | base64 --decode > $HOME/.kube/config
 
-- name: Install Kustomize
-run: curl -sLo kustomize https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/v5.0.1/kustomize_5.0.1_linux_amd64 && chmod +x kustomize && sudo mv kustomize /usr/local/bin/
+      - name: Apply manifests
+        run: |
+          kubectl apply -f k8s/
 
+      - name: Deployment validation
+        run: |
+          kubectl rollout status deployment/blog-backend -n dev --timeout=120s
+          kubectl rollout status deployment/blog-frontend -n dev --timeout=120s
 
-- name: Configure Kubeconfig
-run: |
-echo "${{ secrets.KUBECONFIG_BASE64 }}" | base64 --decode > $HOME/.kube/config
-
-
-- name: Apply manifests
-run: |
-kubectl apply -f k8s/namespaces.yaml
-kubectl apply -f k8s/configmap.yaml -n prod
-kubectl apply -f k8s/secrets.yaml -n prod
-kubectl apply -f k8s/backend-deployment.yaml -n prod
-kubectl apply -f k8s/backend-service.yaml -n prod
-kubectl apply -f k8s/frontend-deployment.yaml -n prod
-kubectl apply -f k8s/frontend-service.yaml -n prod
-kubectl apply -f k8s/ingress.yaml -n prod
-
-
-- name: Deployment validation
-run: |
-kubectl rollout status deployment/blog-backend -n prod --timeout=120s
-kubectl rollout status deployment/blog-frontend -n prod --timeout=120s
-
-
-- name: Rollback on failure (example)
-if: failure()
-run: |
-kubectl rollout undo deployment/blog-frontend -n prod
-kubectl rollout undo deployment/blog-backend -n prod
+      - name: Rollback on failure (example)
+        if: failure()
+        run: |
+          kubectl rollout undo deployment/blog-frontend -n dev
+          kubectl rollout undo deployment/blog-backend -n dev
