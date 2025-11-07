@@ -1,24 +1,14 @@
 variable "aws_region" {
-  type    = string
-  default = "ap-south-1"
+  description = "AWS region where resources will be provisioned"
+  default     = "us-east-2"
 }
 
-variable "cluster_name" {
-  type    = string
-  default = "devops-blog-eks"
+variable "ami_id" {
+  description = "AMI ID for the EC2 instance"
+  default     = "ami-085f9c64a9b75eed5"
 }
 
-variable "vpc_cidr" {
-  type    = string
-  default = "10.0.0.0/16"
-}
-
-variable "domain_name" {
-  type = string
-  description = "Route53 hosted zone domain (example.com)"
-}
-
-variable "hosted_zone_id" {
-  type = string
-  description = "Route53 hosted zone id for the domain"
+variable "my_enviroment" {
+  description = "Instance type for the EC2 instance"
+  default     = "dev"
 }
