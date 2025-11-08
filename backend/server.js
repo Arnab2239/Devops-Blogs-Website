@@ -6,6 +6,7 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+<<<<<<< HEAD
 // Sample blog posts (static data - no database!)
 const blogPosts = [
   {
@@ -37,11 +38,14 @@ const blogPosts = [
   }
 ];
 
+=======
+>>>>>>> 709b45a7cf509acfdc0ee4f7a1c02c4e4e25c484
 // Middleware
 app.use(cors());
 app.use(morgan('combined'));
 app.use(express.json());
 
+<<<<<<< HEAD
 // API Routes
 app.get('/api', (req, res) => {
   res.status(200).json({ 
@@ -71,15 +75,48 @@ app.get('/api/posts/:id', (req, res) => {
   }
 });
 
+=======
+>>>>>>> 709b45a7cf509acfdc0ee4f7a1c02c4e4e25c484
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ 
     status: 'OK', 
+<<<<<<< HEAD
     service: 'blog-backend-api',
+=======
+    service: 'backend-api',
+>>>>>>> 709b45a7cf509acfdc0ee4f7a1c02c4e4e25c484
     timestamp: new Date().toISOString()
   });
 });
 
+<<<<<<< HEAD
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Blog Backend API running on port ${PORT}`);
 });
+=======
+// Routes
+app.use('/api/users', require('./routes/users'));
+
+// Welcome endpoint
+app.get('/', (req, res) => {
+  res.json({ 
+    message: 'Welcome to Backend API',
+    version: '1.0.0',
+    endpoints: {
+      users: '/api/users',
+      health: '/health'
+    }
+  });
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Something went wrong!' });
+});
+
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Backend API running on port ${PORT}`);
+});
+>>>>>>> 709b45a7cf509acfdc0ee4f7a1c02c4e4e25c484

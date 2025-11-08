@@ -1,6 +1,10 @@
 {
   "name": "frontend-app",
+<<<<<<< HEAD
   "version": "1.0.0",
+=======
+  "version": 1.0.0",
+>>>>>>> 709b45a7cf509acfdc0ee4f7a1c02c4e4e25c484
   "private": true,
   "scripts": {
     "dev": "next dev",

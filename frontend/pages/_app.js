@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { useEffect } from 'react';
 import Head from 'next/head';
 import '../styles/globals.css';
@@ -64,3 +65,12 @@ export default function MyApp({ Component, pageProps }) {
     </>
   );
 }
+=======
+import '../styles/globals.css';
+
+function MyApp({ Component, pageProps }) {
+  return <Component {...pageProps} />;
+}
+
+export default MyApp;
+>>>>>>> 709b45a7cf509acfdc0ee4f7a1c02c4e4e25c484

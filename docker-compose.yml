@@ -1,5 +1,30 @@
+<<<<<<< HEAD
 services:
   # Backend Service (API)
+=======
+version: '3.8'
+
+services:
+  # Frontend Service
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: microservices-frontend
+    restart: unless-stopped
+    environment:
+      - API_URL=http://localhost/api
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - app-network
+    labels:
+      - "com.microservices.service=frontend"
+      - "com.microservices.description=Next.js Frontend Application"
+
+  # Backend Service
+>>>>>>> 709b45a7cf509acfdc0ee4f7a1c02c4e4e25c484
   backend:
     build:
       context: ./backend
@@ -12,11 +37,20 @@ services:
     networks:
       - app-network
     healthcheck:
+<<<<<<< HEAD
       disable: true
+=======
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:5000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+>>>>>>> 709b45a7cf509acfdc0ee4f7a1c02c4e4e25c484
     labels:
       - "com.microservices.service=backend"
       - "com.microservices.description=Express.js API Service"
 
+<<<<<<< HEAD
   # Frontend Service (Next.js)
   frontend:
     build:
@@ -34,6 +68,8 @@ services:
       - "com.microservices.service=frontend"
       - "com.microservices.description=Next.js Frontend Application"
 
+=======
+>>>>>>> 709b45a7cf509acfdc0ee4f7a1c02c4e4e25c484
   # Nginx Reverse Proxy
   nginx:
     image: nginx:alpine
@@ -48,6 +84,14 @@ services:
       - backend
     networks:
       - app-network
+<<<<<<< HEAD
+=======
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+>>>>>>> 709b45a7cf509acfdc0ee4f7a1c02c4e4e25c484
     labels:
       - "com.microservices.service=nginx"
       - "com.microservices.description=Nginx Reverse Proxy"
@@ -56,4 +100,12 @@ networks:
   app-network:
     driver: bridge
     labels:
+<<<<<<< HEAD
       - "com.microservices.network=app-network"
+=======
+      - "com.microservices.network=app-network"
+
+volumes:
+  frontend-cache:
+  backend-logs:
+>>>>>>> 709b45a7cf509acfdc0ee4f7a1c02c4e4e25c484
